@@ -14,7 +14,7 @@ variable_name_list = ['surface_pressure','t2m','specific_humidity_2m','evaporati
                       'u10','v10','pblh','precipitation']
 month='01'
 
-dir_data = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Code/step1_input_prepare/0_meteo/step1_bev/2026/'+month+'/'
+dir_data = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom_git/src/forecast_mode/step1_input_prepare/0_meteo/step1_bev/2026/'+month+'/'
 pattern  = 'BEV_meteo*'
 
 data_list_raw = fnmatch.filter(os.listdir(dir_data),pattern)

@@ -29,7 +29,7 @@ for year in year_list:
             filelist = np.sort(ufs_aqm_list_raw)
 
             #for i in range(len(filelist)):   #this is 72 hrs forecasts
-            for i in range(24): #use only the 24 hours forecast
+            for i in range(1,25): #use only the 24 hours forecast
                 filename=dir_data+filelist[i]
                 f=Dataset(filename,'r')
     

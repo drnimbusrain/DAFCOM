@@ -14,7 +14,7 @@ SECTION 1. sequence prepare
 '''
 1-1) open csv
 '''
-dir_ = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Code/step4_ML_LSTM/'
+dir_ = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Data/step4_lstm_train/'
 pattern = 'PM25_2026_01to04_HourlyData_LOG.csv'
 df = pd.read_csv(dir_+pattern)
 
@@ -41,7 +41,7 @@ for i in range(len(site_list)):
             # print(i)
             time_start = time_list[i]
             time_end = time_list[i+time_step-1]
-            if time_start+timedelta(hours=time_step) == time_end:
+            if time_start+timedelta(hours=time_step-1) == time_end:
                 squence_line_start_list.append(i)
                 
 print(len(squence_line_start_list))
@@ -97,7 +97,7 @@ print(np.shape(Y))
 1-7) split into train and test
 '''
 from sklearn.model_selection import train_test_split
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, shuffle=False)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, shuffle=False)  #shuffle=false, means NOT disorder.
 
 print(f"Train shape: {X_train.shape}, Test shape: {X_test.shape}")
 
@@ -106,7 +106,7 @@ print(f"Train shape: {X_train.shape}, Test shape: {X_test.shape}")
 1-8) reshape dimension for LSTM input format
 '''
 
-
+#LSTM model dimention (sample, time_steps, features)
 X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2]))
 X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2]))
 
@@ -131,7 +131,7 @@ model = Sequential([
     LSTM(units=84, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]),dropout=0.2),  # First LSTM layer
     LSTM(units=84, return_sequences=False,dropout=0.2),  # Second LSTM layer
     Dense(units=28),  # Fully connected layer
-    Dense(units=24)  # Output layer
+    Dense(units=time_step-time_step_short)  # Output layer,120-96=24, forecast 24 hrs 
 ])
 
 # Compile the model

@@ -16,7 +16,7 @@ from pprint import pprint
 '''
 0) initialization
 '''
-dir_source = '/Users/beiming.tang/Desktop/1 year NOAA forecast run/Data/ml_data/'
+dir_source = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Data/step6_xgb_train/'
 filename_source = 'merged_file_for_xgboost_training.csv'
 
 # df = pd.read_csv(dir_source+filename_source)
@@ -103,12 +103,12 @@ print('finish section 2')
 3) tunning each 10-fold model
 '''
 max_depth = [3,5,7,9] #3-10
-min_child_weight =[1,5,10] #1-10
-gamma = [0.2,1, 3, 5] #0-5
-subsample = [0.5,1] #0.5-1
-colsample_bytree=[0.5,0.8,1] #0.5-1
-learning_rate = [0.01, 0.15, 0.2] #0.01-0.3
-n_estimators = [100,400,600, 800]#100-1000
+min_child_weight =[1,3, 7,10] #1-10
+gamma = [0.2,1, 2, 3] #0-5
+subsample = [0.5,0.8, 1] #0.5-1
+colsample_bytree=[0.5,0.8, 1] #0.5-1
+learning_rate = [0.01, 0.15,0.2, 0.3] #0.01-0.3
+n_estimators = [100,200, 500,800]#100-1000
 random_grid = {'max_depth': max_depth,
                'min_child_weight': min_child_weight,
                 'gamma': gamma,
@@ -120,7 +120,7 @@ pprint(random_grid)
 
 
 xgb_1 = xgb.XGBRegressor()
-xgb_random_1 = RandomizedSearchCV(estimator = xgb_1, param_distributions = random_grid, n_iter = 300,scoring = 'r2', cv = 10)
+xgb_random_1 = RandomizedSearchCV(estimator = xgb_1, param_distributions = random_grid, n_iter = 100,scoring = 'r2', cv = 10)
 xgb_random_1.fit(input_all, output_all)
 print('ml_1\n',xgb_random_1.best_params_)
 print(xgb_random_1.best_score_)
@@ -146,6 +146,6 @@ xgb_best_1 =xgb.XGBRegressor(subsample=xgb_random_1.best_params_['subsample'],
 xgb_best_1.fit(input_all, output_all)
 
 import joblib
-joblib.dump(xgb_best_1,'./xgb_model_2025JanToApr.joblib')
+joblib.dump(xgb_best_1,'./xgb_model_2026_01to04.joblib')
 
 print('finish section 4')

@@ -12,25 +12,25 @@ from datetime import datetime as dt
 '''
 1) load LSTM model
 '''
-dir_lstm ='/data/aqf3/beiming.tang/DAFCOM/code/step4_ML_LSTM/IncludeJulianDay/Exclude_Spatial/Log_PM25/'
-pattern_lstm = 'lstm_model_2025JantoApr_echo10batch48.h5'
+start_time= dt(2026,4,27,0,0,0)
+end_time=   dt(2026,5,1,0,0,0)
+
+dir_lstm ='/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Data/step4_lstm_train/'
+pattern_lstm = 'lstm_model_2026_01to04.h5'
 lstm_model = load_model(dir_lstm+pattern_lstm)
 
+Scaler_X = joblib.load(dir_lstm+'Scaler_X.save')
+Scaler_Y = joblib.load(dir_lstm+'Scaler_Y.save')
 
-Scaler_X = joblib.load('Scaler_X.save')
-Scaler_Y = joblib.load('Scaler_Y.save')
-
-
-dir_csv = '/data/aqf3/beiming.tang/DAFCOM/code/step4_ML_LSTM/IncludeJulianDay/Exclude_Spatial/Log_PM25/'
-pattern_csv = 'PM25_2025JanToApr_HourlyData_LOG.csv'
-df = pd.read_csv(dir_csv+pattern_csv)
+pattern_csv = 'PM25_2026_01to04_HourlyData_LOG.csv'
+df = pd.read_csv(dir_lstm+pattern_csv)
 
 '''
 2) use only last 96 hours to predict
 '''
 df['time_utc'] = pd.to_datetime(df['time_utc'],format='%Y-%m-%d %H:%M:%S')
 
-df_4days = df[(df['time_utc']>=dt(2025,4,27,0,0,0)) & (df['time_utc'] < dt(2025,5,1,0,0,0))]
+df_4days = df[(df['time_utc']>=start_time) & (df['time_utc'] < end_time)]
 print('df 4 days shape',np.shape(df_4days))
 
 '''
@@ -86,10 +86,10 @@ print('X shape',np.shape(X))
 '''
 6) make lstm predictions
 '''
-Y_pred = lstm_model.predict(X)   # dim = (331, 24, 1)
-Y_pred_2 = Y_pred.reshape(-1,1)  # dim = (331*24, 1)
-Y_original = Scaler_Y.inverse_transform(Y_pred_2)   #dim = (331*24, 1)
-Y_pred_3 = Y_original.reshape(331,24,1)
+Y_pred = lstm_model.predict(X)   # dim = (590, 24, 1)
+Y_pred_2 = Y_pred.reshape(-1,1)  # dim = (590*24, 1)
+Y_original = Scaler_Y.inverse_transform(Y_pred_2)   #dim = (590*24, 1)
+Y_pred_3 = Y_original.reshape(Y_pred.shape[0],24,1)
 
 print('Y pred shape',np.shape(Y_pred_3))
 
@@ -97,14 +97,14 @@ print('Y pred shape',np.shape(Y_pred_3))
 '''
 7) write into csv
 '''
-Y_pred_avr = Y_pred_3.mean(axis=1).reshape(331,1)
+Y_pred_avr = Y_pred_3.mean(axis=1).reshape(Y_pred.shape[0],1)
 df_out = pd.DataFrame(Y_pred_avr,columns=['pred_log_pm25'])
 
 df_out['lat'] = squence_lat_list
 df_out['lon'] = squence_lon_list
 df_out['obs_pm25'] = squence_obs_pm25_list
 
-df_out.to_csv('predict_0501_siteonly_logPM.csv')
+df_out.to_csv('predict_2026_0501_siteonly.csv')
 
 
 

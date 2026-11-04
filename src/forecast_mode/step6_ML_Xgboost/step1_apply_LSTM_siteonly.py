@@ -15,14 +15,14 @@ from datetime import timedelta
 '''
 1) load LSTM model
 '''
-dir_lstm ='/data/aqf3/beiming.tang/DAFCOM/code/step4_ML_LSTM/IncludeJulianDay/Exclude_Spatial/Log_PM25/'
-pattern_lstm = 'lstm_model_2025JantoApr_echo10batch48.h5'
+dir_lstm ='/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Data/step4_lstm_train/'
+pattern_lstm = 'lstm_model_2026_01to04.h5'
 lstm_model = load_model(dir_lstm+pattern_lstm)
 
 Scaler_X = joblib.load(dir_lstm+'Scaler_X.save')
 Scaler_Y = joblib.load(dir_lstm+'Scaler_Y.save')
 
-pattern_csv = 'PM25_2025_01to04_HourlyData_LOG.csv'
+pattern_csv = 'PM25_2026_01to04_HourlyData_LOG.csv'
 df = pd.read_csv(dir_lstm+pattern_csv)
 print('1 finish log mode')
 
@@ -79,17 +79,17 @@ print('5 X shape',np.shape(X))
 '''
 6) make lstm predictions
 '''
-Y_pred = lstm_model.predict(X)                      #dim = (2617969, 24, 1)
-Y_pred_2 = Y_pred.reshape(-1,1)                     #dim = (2617969*24, 1)
-Y_original = Scaler_Y.inverse_transform(Y_pred_2)   #dim = (2617969*24, 1)
-Y_pred_3 = Y_original.reshape(len(X),24,1)          #dim = (2617969,24,1)
+Y_pred = lstm_model.predict(X)                      #dim = (N_sample_size, 24, 1)
+Y_pred_2 = Y_pred.reshape(-1,1)                     #dim = (N_sample_size*24, 1)
+Y_original = Scaler_Y.inverse_transform(Y_pred_2)   #dim = (N_sample_size*24, 1)
+Y_pred_3 = Y_original.reshape(len(X),24,1)          #dim = (N_sample_size,24,1)
 
 print('6 Y pred shape',np.shape(Y_pred_3))
 
 '''
 7) write into csv
 '''
-Y_pred_1hr = Y_pred_3[:,0,:]   #dim = (2617969,1)
+Y_pred_1hr = Y_pred_3[:,0,:]   #dim = (N_sample_size,1), this is only the 1st hour prediction
 print('7 Y pred 1hr',np.shape(Y_pred_1hr))
 
 df_out = pd.DataFrame(Y_pred_1hr,columns=['lstm_predict_log_pm25'])

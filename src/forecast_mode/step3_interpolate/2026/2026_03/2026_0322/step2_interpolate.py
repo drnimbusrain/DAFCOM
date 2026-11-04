@@ -28,7 +28,7 @@ obs_init = '20260301_20260401'
 
 
 
-dir_obs = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom/Code/step2_obs_prepare/2026/'+dir_month+'/'
+dir_obs = '/scratch3/NCEPDEV/stmp/Beiming.Tang/Project/Dafcom_git/src/forecast_mode/step2_obs_prepare/2026/'+dir_month+'/'
 pattern_obs = 'getobs_PM25_'+obs_init+'.xlsx'
 df_obs = pd.read_excel(dir_obs+pattern_obs)
 
