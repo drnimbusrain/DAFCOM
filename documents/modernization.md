@@ -1,5 +1,8 @@
 # Ursa workflow migration
 
+For step-by-step installation, configuration, training, evaluation, and Ursa
+forecast operation, see the [DAFCOM user guide](user-guide.md).
+
 ## Branch comparison
 
 The original `ursa_2026` tip (`7d63f5b`, before this migration) differs from

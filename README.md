@@ -6,6 +6,10 @@ path on this branch; date/month/domain copies under
 [`src/forecast_mode`](src/forecast_mode/) are retained as scientific reference,
 not invoked by the package. Reanalysis research scripts remain unchanged.
 
+For detailed configuration, training/evaluation, forecast-only execution, and
+Ursa submission/recovery instructions, see the
+[DAFCOM user guide](documents/user-guide.md).
+
 ## Install and configure
 
 Use Python 3.12 for the tested TensorFlow environment. The core package supports
