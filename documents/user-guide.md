@@ -2,6 +2,11 @@
 
 This guide describes the executable package on the `ursa_2026` branch. It does
 not use the legacy date-specific Python files or their submission shell loops.
+The legacy forecast and reanalysis trees are no longer included in this branch;
+consult the
+[pre-removal source snapshot](https://github.com/drnimbusrain/DAFCOM/tree/bddff9f9593759bdbe5047e428aa49627d3ce8c0/src)
+when historical reference scripts are needed. Reanalysis research workflows are
+not implemented by the optimized forecast package.
 For the scientific changes relative to those scripts, see the
 [migration guide](modernization.md). The reference configuration is
 [`configs/ursa.yaml`](../configs/ursa.yaml).

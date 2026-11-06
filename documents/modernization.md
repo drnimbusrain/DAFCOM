@@ -33,11 +33,14 @@ Its dataflow/model contracts differ from the tested Ursa scripts. This migration
 uses the modular/configuration direction without blindly merging incompatible
 scientific implementations or introducing a second regridding backend.
 
-The active implementation is now [`src/dafcom`](../src/dafcom/). Existing
-forecast scripts are retained, unchanged, for real-data acceptance comparisons.
-They are not dependencies of the package. Their physical deletion/archival
-should follow the acceptance checks below, not precede scientific validation.
-The reanalysis tree is outside this forecast migration.
+The active implementation is now [`src/dafcom`](../src/dafcom/). The legacy
+forecast and reanalysis trees have been removed from this branch to keep the
+checkout focused on the package. Neither tree is a package dependency.
+Reference scripts for real-data comparisons remain available in the
+[pre-removal source snapshot](https://github.com/drnimbusrain/DAFCOM/tree/bddff9f9593759bdbe5047e428aa49627d3ce8c0/src).
+Removing those trees does not establish scientific equivalence or operational
+acceptance, and the package does not replace the legacy reanalysis research
+workflows.
 
 ## Consolidated stage mapping
 

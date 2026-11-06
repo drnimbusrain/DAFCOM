@@ -2,9 +2,11 @@
 
 DAFCOM combines UFS air-quality predictors, observations, LSTM forecasts, and
 XGBoost refinement. The configurable Python package is the supported execution
-path on this branch; date/month/domain copies under
-[`src/forecast_mode`](src/forecast_mode/) are retained as scientific reference,
-not invoked by the package. Reanalysis research scripts remain unchanged.
+path on this branch. The legacy forecast and reanalysis script trees have been
+removed; their scientific reference implementations remain available in
+[Git history](https://github.com/drnimbusrain/DAFCOM/tree/bddff9f9593759bdbe5047e428aa49627d3ce8c0/src).
+The package does not depend on those scripts or implement the legacy reanalysis
+research workflows.
 
 For detailed configuration, training/evaluation, forecast-only execution, and
 Ursa submission/recovery instructions, see the
