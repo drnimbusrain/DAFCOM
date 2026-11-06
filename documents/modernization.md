@@ -111,6 +111,8 @@ nonintegral grid shapes fail validation.
   Station sampling does not extrapolate beyond actual grid coordinates.
   Gridded inference outputs only core cells; assembly verifies coordinates/time
   before writing each tile into its assigned hyperslab.
+  See the [domain tiling and memory explanation](user-guide.md#51-how-a-domain-becomes-independently-executable-tiles)
+  for the CONUS partition example, cell-batch memory estimates, and trade-offs.
 - **Observations:** NetCDF, CSV, or XLSX inputs are supported (XLSX additionally
   needs the `excel` extra). Missing sentinels are masked before
   hourly means. NetCDF station IDs should be configured using `site`; positional

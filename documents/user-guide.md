@@ -281,6 +281,111 @@ For a canary, choose a small domain that contains several observation sites,
 not merely one grid cell. Train a separate canary model; it does not replace a
 CONUS model.
 
+### 5.1 How a domain becomes independently executable tiles
+
+A named domain defines the complete geographic target grid. A tile is a
+rectangular processing unit within that grid, identified by integer start/stop
+row and column indices. Tiles are not separate experiments or separately
+trained models.
+
+For the reference full CONUS domain:
+
+| Quantity | Value |
+|---|---|
+| Grid dimensions | 2,400 latitude rows x 6,000 longitude columns |
+| Total cells | 14,400,000 |
+| Configured tile dimensions | 256 x 256 cells |
+| Tile layout | 10 tile rows x 24 tile columns |
+| Total tiles | 240 |
+
+Tile counts round up in each direction; outer tiles are smaller where the
+domain dimensions are not exact multiples of the tile dimensions. Every target
+cell belongs to exactly one core tile, with no gaps or duplicate ownership.
+
+Each tile task identifies its date, named domain, row/column bounds, and shared
+configuration. Once prerequisite inputs and models are available, regridding
+or prediction for that tile can execute without waiting for neighboring tiles.
+Slurm distributes these tasks across available workers, subject to the
+configured array concurrency limit. Each worker writes a separate tile product,
+avoiding concurrent writes to the same NetCDF file.
+
+All prediction tiles within a domain use the same domain-trained models,
+scalers, and feature ordering. Tiling changes the execution strategy, not the
+scientific model assigned to each cell.
+
+### 5.2 Why regridded tiles include a halo
+
+Station interpolation near a tile edge needs surrounding grid values that may
+lie just outside the tile's core. Regridded tiles therefore include a one-cell
+halo, clipped at domain boundaries. This small overlap supplies those neighboring
+values without requiring workers to exchange data during station sampling.
+
+Final gridded forecasts contain only core cells, not duplicated halo cells.
+After tile prediction completes, assembly checks each tile's coordinates,
+times, shapes, and finite values, then writes it into its assigned portion of
+the domain NetCDF file.
+
+### 5.3 How tiling and batching reduce memory
+
+A full-domain predictor tensor containing every CONUS cell, 96 historical
+hours, and 21 predictors would hold:
+
+```text
+14,400,000 cells x 96 hours x 21 predictors x 4 bytes = 116.1 GB
+```
+
+This assumes float32 values and decimal GB. It describes only that raw tensor,
+not total process memory; scaling copies, intermediate arrays, model weights,
+and predictions require additional space.
+
+A full 256 x 256 tile contains 65,536 cells, about 220 times fewer cells than
+the full domain. Prediction further subdivides each tile into cell batches:
+
+| Predictor tensor scope | Cells | Memory for 96 hours x 21 float32 predictors |
+|---|---:|---:|
+| Full CONUS | 14,400,000 | Approximately 116.1 GB |
+| One full tile | 65,536 | Approximately 528.5 MB |
+| One prediction batch | 256 | Approximately 2.1 MB |
+
+With `prediction_batch_cells: 256`, the implementation constructs histories for
+256 cells at a time rather than allocating the full-tile or full-domain
+predictor tensor. Tile forecast output arrays remain in memory, along with
+models, scalers, numerical-library workspace, and I/O buffers. The 2.1 MB figure
+is therefore **not** a job-memory recommendation.
+
+Assembly also bounds memory: it reads one forecast tile at a time and writes
+directly into the domain output, rather than holding the entire domain forecast
+in RAM.
+
+### 5.4 Processing benefits and practical trade-offs
+
+- **Parallel execution:** independent tile tasks can run on multiple nodes.
+- **Manageable allocations:** smaller target-grid working sets can fit
+  lower-memory jobs and available compute resources more easily.
+- **Separate controls:** `tile_shape` controls spatial task size,
+  `prediction_batch_cells` controls predictor-batch size, and
+  `slurm.max_concurrent` controls concurrent array tasks per stage.
+- **Failure localization:** date/domain/tile outputs and logs identify the
+  affected work unit. Automatic retry/resume is not currently implemented.
+- **Consistent domain products:** verified core tiles assemble without seams
+  caused by duplicate cell ownership or missing tile placement.
+
+Tiling reduces per-task target-grid memory and enables parallelism; it does not
+eliminate the total workload or guarantee a particular speedup. Smaller tiles
+create more files, scheduler tasks, repeated reads, and scheduling overhead.
+Each prediction worker loads its own models. Independent stages can overlap,
+so a per-stage concurrency limit is not a workflow-wide memory or CPU cap.
+
+Current regridding tasks can still load complete native source fields, even
+though their target grids are tiled. Ingestion, station-feature processing, and
+training have separate memory requirements and are not all controlled by
+`prediction_batch_cells`. Tiling also does not reduce the final domain's cell
+count or automatically reduce retained storage.
+
+Choose tile and batch sizes using representative Ursa canaries, balancing
+measured peak memory and walltime against scheduler and shared-filesystem
+overhead.
+
 ## 6. Configure UFS and static predictors
 
 Each key under `variables` names a package field, its output filenames, and
