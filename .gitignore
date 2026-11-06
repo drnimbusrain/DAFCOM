@@ -45,5 +45,5 @@ __pycache__/
 build/
 dist/
 runs/
-src/forecast_mode
-src/reanalysis_mode
+src/forecast_mode/
+src/reanalysis_mode/
