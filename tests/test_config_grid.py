@@ -94,6 +94,7 @@ def test_degenerate_grid_and_distances():
         ("xgboost", "parameters", {"n_jobs": 100}),
         ("xgboost", "search", {"max_depth": []}),
         ("xgboost", "folds", 1),
+        ("xgboost", "scoring", "not_a_scorer"),
         ("lstm", "units", []),
         ("lstm", "features", ["hour_utc", "hour_utc"]),
     ],
@@ -110,3 +111,13 @@ def test_monthly_template_cannot_silently_freeze_january(config):
     settings["variables"]["elevation"]["source"] = "/static/{month}.nc"
     with pytest.raises(ValidationError, match="static_period: monthly"):
         Config.model_validate(settings)
+
+
+def test_scoring_default_and_roundtrip(config, tmp_path):
+    settings = config.model_dump()
+    del settings["models"]["xgboost"]["scoring"]
+    assert Config.model_validate(settings).models.xgboost.scoring == "r2"
+    config.models.xgboost.scoring = "neg_mean_absolute_error"
+    path = tmp_path / "scoring.yaml"
+    save_config(config, path)
+    assert load_config(path).models.xgboost.scoring == "neg_mean_absolute_error"

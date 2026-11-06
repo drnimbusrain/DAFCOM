@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from sklearn.metrics import get_scorer
 
 PositiveInt = Annotated[int, Field(strict=True, gt=0)]
 Name = Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_-]*$")]
@@ -138,8 +139,15 @@ class XGBoost(Settings):
     )
     search: dict[str, list[float | int | str]] = Field(default_factory=dict)
     search_iterations: PositiveInt = 100
+    scoring: str = "r2"
     folds: int = Field(default=10, strict=True, ge=2)
     seed: int = 42
+
+    @field_validator("scoring")
+    @classmethod
+    def valid_scoring(cls, value: str) -> str:
+        get_scorer(value)
+        return value
 
     @model_validator(mode="after")
     def parameter_contract(self):

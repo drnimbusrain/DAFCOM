@@ -146,6 +146,8 @@ Retraining and scientific review are required:
    intentionally replaces legacy Jan-Apr fitting for both stacked models.
 4. Optional randomized XGBoost search uses chronological folds grouped by valid
    time, never splitting stations at the same hour across a fold boundary.
+   The configurable `models.xgboost.scoring` selects the search metric
+   (default `r2`); negative error scorers support RMSE/MAE selection.
    Search parallelism is one, with estimator threads limited to allocated CPUs.
 5. Both site and grid inference transform predictors with the fitted X scaler
    and inverse-transform predictions with the Y scaler. The legacy small-domain

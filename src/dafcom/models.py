@@ -292,7 +292,7 @@ def train_xgb(config, domain):
             model,
             spec.search,
             n_iter=spec.search_iterations,
-            scoring="r2",
+            scoring=spec.scoring,
             cv=chronological_folds(frame.time_utc.to_numpy(), spec.folds),
             random_state=spec.seed,
             n_jobs=1,
@@ -321,6 +321,7 @@ def train_xgb(config, domain):
 
 def load_xgb(config, domain, stage="site_xgb"):
     metadata = json.loads(source_artifact(config, domain, "xgb_metadata", "json").read_text())
+    metadata["xgboost"].setdefault("scoring", "r2")
     if metadata["xgboost"] != config.models.xgboost.model_dump(mode="json") or metadata[
         "training"
     ] != config.models.xgb_training.model_dump(mode="json"):

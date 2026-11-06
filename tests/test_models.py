@@ -66,13 +66,28 @@ def test_metrics_exact():
         metrics([1, 2], [1])
 
 
-def test_real_xgboost_chronological_search(config):
+@pytest.mark.parametrize(
+    "scoring", ["r2", "neg_root_mean_squared_error", "neg_mean_absolute_error"]
+)
+def test_real_xgboost_chronological_search(config, monkeypatch, scoring):
     pytest.importorskip("xgboost")
+    import json
+
+    from dafcom import models
     from dafcom.models import artifact, load_xgb, train_xgb
     from dafcom.storage import product, write_csv
 
     config.models.xgboost.search = {"max_depth": [1, 2]}
     config.models.xgboost.search_iterations = 2
+    config.models.xgboost.scoring = scoring
+    original_search = models.RandomizedSearchCV
+    selected_scorers = []
+
+    def checked_search(*args, **kwargs):
+        selected_scorers.append(kwargs["scoring"])
+        return original_search(*args, **kwargs)
+
+    monkeypatch.setattr(models, "RandomizedSearchCV", checked_search)
     for day in config.models.xgb_training.days():
         rows = []
         for time in pd.date_range(day, periods=24, freq="h"):
@@ -95,8 +110,14 @@ def test_real_xgboost_chronological_search(config):
         stacked["lstm_pm25"] = frame.obs_pm25
         write_csv(stacked, product(config, "site_lstm", domain="tiny", day=day, suffix="csv"))
     train_xgb(config, "tiny")
+    assert selected_scorers == [scoring]
+    metadata_path = artifact(config, "tiny", "xgb_metadata", "json")
+    metadata = json.loads(metadata_path.read_text())
+    assert metadata["xgboost"]["scoring"] == scoring
     results = pd.read_csv(artifact(config, "tiny", "xgb_search", "csv"))
     assert len(results) == 2
+    if scoring.startswith("neg_"):
+        assert (results.mean_test_score <= 0).all()
     model = load_xgb(config, "tiny")
     assert model.n_jobs == 1
     assert np.isfinite(
@@ -104,6 +125,13 @@ def test_real_xgboost_chronological_search(config):
             stacked.assign(v13_ufs_pm25=10, v11_elevation=1)[config.models.xgboost.features]
         )
     ).all()
+    if scoring == "r2":
+        del metadata["xgboost"]["scoring"]
+        metadata_path.write_text(json.dumps(metadata))
+        load_xgb(config, "tiny")
+    config.models.xgboost.scoring = "neg_mean_squared_error"
+    with pytest.raises(ValueError, match="configuration mismatch"):
+        load_xgb(config, "tiny")
 
 
 def test_full_forecast_pipeline(synthetic_data, tmp_path):

@@ -631,6 +631,7 @@ xgboost:
     learning_rate: 0.15
   search: {}
   search_iterations: 100
+  scoring: r2
   folds: 10
   seed: 42
 ```
@@ -647,13 +648,34 @@ search:
   n_estimators: [100, 200]
   learning_rate: [0.05, 0.15]
 search_iterations: 6
+scoring: neg_root_mean_squared_error
 folds: 5
 ```
 
 Search uses chronological valid-time folds; all stations at a given hour remain
 on the same side of each split. Ensure enough unique times for the requested
-folds. Search scores use R-squared; final external evaluation reports the metrics
-described below. Search is serial across candidate fits; each estimator uses
+folds. `scoring` selects a scikit-learn scorer by name and defaults to `r2`.
+Invalid scorer names fail configuration validation. Common regression choices:
+
+| `scoring` | Selection criterion |
+|---|---|
+| `r2` | Maximize R-squared (default). |
+| `neg_root_mean_squared_error` | Minimize RMSE. |
+| `neg_mean_squared_error` | Minimize MSE. |
+| `neg_mean_absolute_error` | Minimize MAE. |
+
+Search always maximizes the score, so error metrics require their `neg_` names.
+For example, a saved negative RMSE score of `-5` is better than `-8`; negate it
+to report a positive RMSE. Use a regression scorer appropriate to continuous
+PM2.5 targets, not a classification scorer.
+
+`scoring` applies only when `search` is nonempty. It does not change the
+estimator's fitting objective or the final external evaluation metrics.
+The scorer is recorded in model metadata and checked on model reuse; retain
+the trained value in forecast configurations. Artifacts created before this
+setting existed are treated as using `r2`.
+
+Search is serial across candidate fits; each estimator uses
 the stage's allocated CPUs. Do not put `n_jobs`, `nthread`, or `random_state` in
 parameters/search; use Slurm `cpus` and `seed`.
 

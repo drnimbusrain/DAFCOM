@@ -199,6 +199,8 @@ models:
     # Populate search to enable randomized chronological CV.
     search: {}
     search_iterations: 100
+    # Search selection metric; ignored when search is empty. Error metrics use neg_ names.
+    scoring: r2  # Alternatives: neg_root_mean_squared_error, neg_mean_absolute_error
     folds: 10
     seed: 42
 
