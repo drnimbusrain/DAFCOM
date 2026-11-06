@@ -36,3 +36,12 @@ __pycache__/
 *_backup.py
 *~
 .DS_Store
+
+# Package development and generated workflows
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+runs/
